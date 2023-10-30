@@ -26,25 +26,27 @@ public class UserServiceImpl implements UserService{
     @Override
     public ResponseEntity<String> signUp(Map<String, String> requestMap) {
         log.info("inside signup {}", requestMap);
-        if(validateSignUpMap(requestMap)){
-            User user = userDao.findByEmailId(requestMap.get("email"));
-            if(Objects.isNull(user)){
-                userDao.save(getUserFromMap(requestMap));
+        try{
+            if(validateSignUpMap(requestMap)){
+                User user = userDao.findByEmailId(requestMap.get("email"));
+                if(Objects.isNull(user)){
+                    userDao.save(getUserFromMap(requestMap));
+                    return CafeUtils.getResponseEntity("Successfully Registered", HttpStatus.OK);
+                }else{
+                    return CafeUtils.getResponseEntity("Email already exits.", HttpStatus.BAD_REQUEST);
+                }
             }else{
-                return CafeUtils.getResponseEntity("Email already axits.", HttpStatus.BAD_REQUEST);
+                return CafeUtils.getResponseEntity(CafeConstants.INVALID_DATA, HttpStatus.BAD_REQUEST);
             }
-        }else{
-            return CafeUtils.getResponseEntity(CafeConstants.INVALID_DATA, HttpStatus.BAD_REQUEST);
+        }catch(Exception e){
+            e.printStackTrace();
         }
-        return null;
+        return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     
     private boolean validateSignUpMap(Map<String, String> requestMap){
-        if (requestMap.containsKey("name") && requestMap.containsKey("contactNumber")
-        && requestMap.containsKey("email") && requestMap.containsKey("password")){
-            return true;
-        }
-        return false;
+        return requestMap.containsKey("name") && requestMap.containsKey("contactNumber")
+                && requestMap.containsKey("email") && requestMap.containsKey("password");
     }
 
     private User getUserFromMap(Map<String, String> requestMap){
